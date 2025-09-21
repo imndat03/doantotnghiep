@@ -330,6 +330,38 @@
         border-radius: 6px;
         font-weight: 700;
       }
+      /* RESPONSIVE */
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: 1fr; /* Chia 1 cột */
+        }
+        .stat-card,
+        .status-card,
+        .controls,
+        .alert-panel,
+        .chart-card {
+          grid-column: span 1 !important; /* mỗi thẻ chiếm trọn 1 hàng */
+        }
+        header {
+          flex-direction: column;
+          gap: 8px;
+          align-items: flex-start;
+        }
+        .controls > div {
+          flex-direction: column; /* Nút bấm xếp dọc */
+        }
+        .controls button {
+          width: 100%; /* Nút chiếm full chiều ngang */
+        }
+        .big-lamp {
+          width: 120px;
+          height: 120px;
+          font-size: 16px;
+        }
+        .login-box {
+          width: 90%;
+        }
+      }
     </style>
   </head>
   <body>
