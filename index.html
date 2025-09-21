@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Buồng Sạc Xe An Toàn</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        --bg: #0f1724;
+        --card: #0b1220;
+        --accent: #1fb6ff;
+        --safe: #16a34a;
+        --warn: #f59e0b;
+        --alarm: #ef4444;
+        --glass: rgba(255, 255, 255, 0.03);
+        --mode-auto: #16a34a;
+        --mode-manual: #f59e0b;
+        color-scheme: dark;
+      }
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        font-family: Inter, system-ui;
+        background: linear-gradient(180deg, #071021 0%, #0f1724 100%);
+        color: #e6eef8;
+      }
+      /* LOGIN */
+      .login-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+      .login-box {
+        background: #0b1220;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 260px;
+      }
+      .login-box h2 {
+        margin: 0 0 12px;
+        text-align: center;
+        color: #1fb6ff;
+      }
+      .login-box input {
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #e6eef8;
+      }
+      .login-box button {
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        background: #1fb6ff;
+        color: #021018;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .login-box button:hover {
+        background: #38c0ff;
+      }
+      .error-msg {
+        color: #ef4444;
+        font-size: 13px;
+        text-align: center;
+        display: none;
+      }
+      #app {
+        display: none;
+      }
+      /* DASHBOARD */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .title {
+        font-weight: 700;
+        font-size: 18px;
+        display: flex;
+        flex-direction: column;
+      }
+      .title .sub {
+        font-size: 12px;
+        color: #9fb2c9;
+      }
+      .clock {
+        font-size: 14px;
+        color: #cde6ff;
+      }
+      .logout-btn {
+        background: linear-gradient(45deg, #e63946, #d90429);
+        color: #fff;
+        font-weight: bold;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .logout-btn:hover {
+        background: linear-gradient(45deg, #ff4d5a, #d90429);
+      }
+      .container {
+        max-width: 1100px;
+        margin: 12px auto;
+        padding: 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+      }
+      .stat-card {
+        grid-column: span 4;
+      }
+      .status-card {
+        grid-column: span 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 18px;
+      }
+      .controls {
+        grid-column: span 4;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .small {
+        font-size: 12px;
+        color: #9fb2c9;
+      }
+      .value {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .bar {
+        height: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .bar > i {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), #7ee3ff);
+      }
+      .big-lamp {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 20px;
+        color: #021018;
+      }
+      .lamp-safe {
+        background: var(--safe);
+      }
+      .lamp-warn {
+        background: var(--warn);
+      }
+      .lamp-alarm {
+        background: var(--alarm);
+      }
+      .state-list {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .state-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        background: var(--glass);
+        border-radius: 8px;
+      }
+      .btn {
+        padding: 12px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn-stop {
+        background: var(--alarm);
+        color: #fff;
+      }
+      .btn-start {
+        background: var(--safe);
+        color: #01240d;
+      }
+      .btn-reset {
+        background: var(--warn);
+        color: #3a2100;
+      }
+      .btn-sec {
+        background: rgba(255, 255, 255, 0.03);
+        color: #cde6ff;
+      }
+      .alert-panel {
+        grid-column: span 12;
+        padding: 12px;
+        border-radius: 8px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 69, 58, 0.12),
+          rgba(0, 0, 0, 0.03)
+        );
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .alert-title {
+        font-weight: 800;
+        color: #ffd0cf;
+      }
+      .log {
+        max-height: 160px;
+        overflow: auto;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+        font-size: 13px;
+      }
+      .chart-card {
+        grid-column: span 12;
+        padding: 12px;
+      }
+      canvas {
+        background: transparent;
+        border-radius: 8px;
+      }
+      /* POPUP */
+      .popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #16a34a;
+        color: #fff;
+        padding: 12px 18px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        font-weight: 600;
+        display: none;
+        z-index: 1000;
+      }
+      /* MODAL CAMERA */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+      }
+      .modal-content {
+        background: #0b1220;
+        padding: 16px;
+        border-radius: 12px;
+        max-width: 800px;
+        width: 90%;
+        text-align: center;
+      }
+      .modal-content img {
+        width: 100%;
+        border-radius: 8px;
+        background: black;
+      }
+      .close-btn {
+        background: #ef4444;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        margin-top: 12px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      /* MODE LAMP */
+      .mode-lamp {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 13px;
+        color: #021018;
+      }
+      .mode-auto {
+        background: var(--mode-auto);
+      }
+      .mode-manual {
+        background: var(--mode-manual);
+      }
+      .state-on {
+        background: var(--safe);
+        color: #01240d;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+      }
+      .state-off {
+        background: var(--alarm);
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- POPUP -->
+    <div id="popup" class="popup"></div>
+    <!-- CAMERA MODAL -->
+    <div id="cameraModal" class="modal">
+      <div class="modal-content">
+        <h3 style="margin-top: 0; color: #1fb6ff">Camera Giám Sát</h3>
+        <img id="cameraStream" src="" alt="Camera stream" />
+        <button class="close-btn" onclick="closeCam()">Đóng</button>
+      </div>
+    </div>
+    <!-- LOGIN -->
+    <div id="loginPage" class="login-page">
+      <div class="login-box">
+        <h2>Đăng nhập hệ thống</h2>
+        <input type="text" id="username" placeholder="Tên đăng nhập" />
+        <input type="password" id="password" placeholder="Mật khẩu" />
+        <button onclick="login()">ĐĂNG NHẬP</button>
+        <div id="err" class="error-msg">Sai tài khoản hoặc mật khẩu</div>
+      </div>
+    </div>
+    <!-- APP -->
+    <div id="app">
+      <div class="container">
+        <header>
+          <div class="title">
+            <div style="display: flex; gap: 10px; align-items: center">
+              <div
+                style="
+                  width: 34px;
+                  height: 34px;
+                  background: #1fb6ff;
+                  border-radius: 6px;
+                "
+              ></div>
+              <div>
+                <div style="font-size: 16px">BUỒNG SẠC XE AN TOÀN</div>
+                <div class="sub">Battery Charging Safety System</div>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 15px">
+            <div class="clock" id="clock">--:--:--</div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+          </div>
+        </header>
+        <div class="grid">
+          <!-- Temp -->
+          <div class="card stat-card">
+            <div class="small">🔥 Nhiệt độ</div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <div>
+                <div class="value" id="tempVal">-- °C</div>
+                <div class="small" id="tempNote">Status: --</div>
+              </div>
+              <div style="width: 48%">
+                <div class="bar"><i id="tempBar" style="width: 10%"></i></div>
+                <div class="small">Ngưỡng Warn/Alarm</div>
+              </div>
+            </div>
+          </div>
+          <!-- Lamp -->
+          <div class="card status-card">
+            <div id="bigLamp" class="big-lamp lamp-safe">SAFE</div>
+            <div class="small">Trạng thái hệ thống</div>
+            <div style="width: 100%; margin-top: 12px">
+              <div class="state-list">
+                <div class="state-row">
+                  <div class="small">Sạc (Contactor)</div>
+                  <div id="chargingState">--</div>
+                </div>
+                <div class="state-row">
+                  <div class="small">Quạt hút</div>
+                  <div id="fanState">--</div>
+                </div>
+                <div class="state-row">
+                  <div class="small">Còi báo</div>
+                  <div id="buzzerState">--</div>
+                </div>
+                <div class="state-row">
+                  <div class="small">Chế độ</div>
+                  <div>
+                    <span id="modeLamp" class="mode-lamp mode-auto">AUTO</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Controls -->
+          <div class="card controls">
+            <div style="display: flex; gap: 8px">
+              <button id="btnStart" class="btn btn-start">START</button>
+              <button id="btnStop" class="btn btn-stop">STOP</button>
+              <button id="btnReset" class="btn btn-reset">RESET</button>
+              <button id="btnMode" class="btn btn-reset">AUTO/MANUAL</button>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 8px">
+              <button id="btnFan" class="btn btn-sec">Toggle FAN</button>
+              <button id="btnBz" class="btn btn-sec">Toggle BUZZER</button>
+              <button id="btnCam" class="btn btn-sec">Camera</button>
+            </div>
+            <div class="small" style="margin-top: 12px">
+              IP: <span id="ipAddr">--</span> • WiFi:
+              <span id="wifiSignal">--</span>
+            </div>
+          </div>
+
+          <!-- Alert -->
+          <div class="alert-panel">
+            <div
+              style="
+                min-width: 10px;
+                border-radius: 6px;
+                padding: 8px;
+                background: linear-gradient(180deg, #ff6b6b, #ffb3b3);
+              "
+            ></div>
+            <div style="flex: 1">
+              <div class="alert-title" id="alertTitle">No alerts</div>
+              <div class="log" id="logArea"></div>
+            </div>
+          </div>
+          <!-- Chart -->
+          <div class="card chart-card">
+            <canvas id="trendChart" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* LOGIN */
+      const USER = "admin",
+        PASS = "1234";
+      if (localStorage.getItem("loggedIn") === "true") {
+        showApp();
+      }
+      function login() {
+        const u = document.getElementById("username").value.trim();
+        const p = document.getElementById("password").value.trim();
+        if (u === USER && p === PASS) {
+          localStorage.setItem("loggedIn", "true");
+          showApp();
+          showPopup("Đăng nhập thành công!");
+        } else document.getElementById("err").style.display = "block";
+      }
+      function logout() {
+        localStorage.removeItem("loggedIn");
+        document.getElementById("loginPage").style.display = "flex";
+        document.getElementById("app").style.display = "none";
+      }
+      function showApp() {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("app").style.display = "block";
+      }
+
+      /* POPUP */
+      function showPopup(msg, bg = "#16a34a") {
+        const popup = document.getElementById("popup");
+        popup.textContent = msg;
+        popup.style.background = bg; // đổi nền theo tham số
+        popup.style.display = "block";
+        setTimeout(() => (popup.style.display = "none"), 3000);
+      }
+
+      /* CLOCK */
+      setInterval(() => {
+        document.getElementById("clock").textContent =
+          new Date().toLocaleString();
+      }, 1000);
+
+      /* CHART */
+      let chartData = {
+        labels: [],
+        datasets: [
+          {
+            label: "Temp (°C)",
+            data: [],
+            borderColor: "#ff9f1c",
+            tension: 0.2,
+            fill: false,
+          },
+          {
+            label: "Gas (ppm)",
+            data: [],
+            borderColor: "#2ec4b6",
+            tension: 0.2,
+            fill: false,
+          },
+        ],
+      };
+      let chart = new Chart(document.getElementById("trendChart"), {
+        type: "line",
+        data: chartData,
+        options: { scales: { y: { beginAtZero: true } } },
+      });
+
+      /* STATES */
+      let charging = false,
+        fan = false,
+        buzzer = false,
+        modeAuto = true,
+        overheat = false;
+
+      /* BUTTON EVENTS */
+      document.getElementById("btnStart").onclick = () => {
+        if (overheat) {
+          showPopup("⚠️ Quá nhiệt! Không thể bật sạc", "#ef4444");
+          return;
+        }
+        if (modeAuto) {
+          showPopup("Đang ở chế độ AUTO", "#f59e0b");
+          return;
+        }
+        charging = true;
+        updateStates();
+        addLog("Bật sạc (Manual)");
+      };
+      document.getElementById("btnStop").onclick = () => {
+        charging = false;
+        updateStates();
+        addLog("Tắt sạc");
+      };
+      document.getElementById("btnReset").onclick = () => {
+        charging = false;
+        fan = false;
+        buzzer = false;
+        updateStates();
+        addLog("RESET hệ thống");
+      };
+      document.getElementById("btnFan").onclick = () => {
+        if (modeAuto) {
+          showPopup("Đang ở chế độ tự động!", "#f59e0b");
+          return;
+        }
+        fan = !fan;
+        updateStates();
+        addLog("Toggle FAN");
+      };
+      document.getElementById("btnBz").onclick = () => {
+        if (modeAuto) {
+          showPopup("Đang ở chế độ tự động!", "#f59e0b");
+          return;
+        }
+        buzzer = !buzzer;
+        updateStates();
+        addLog("Toggle BUZZER");
+      };
+      document.getElementById("btnCam").onclick = () => {
+        document.getElementById("cameraModal").style.display = "flex";
+        document.getElementById("cameraStream").src = "http://192.168.1.50/";
+        addLog("Mở camera");
+      };
+      document.getElementById("btnMode").onclick = () => {
+        modeAuto = !modeAuto;
+        updateModeLamp();
+        addLog("Chuyển sang " + (modeAuto ? "AUTO" : "MANUAL"));
+      };
+
+      /* UPDATE STATES TO UI */
+      function updateStates() {
+        // Sạc
+        const chargeEl = document.getElementById("chargingState");
+        chargeEl.textContent = charging ? "ON" : "OFF";
+        chargeEl.className = charging ? "state-on" : "state-off";
+
+        // Quạt
+        const fanEl = document.getElementById("fanState");
+        fanEl.textContent = fan ? "ON" : "OFF";
+        fanEl.className = fan ? "state-on" : "state-off";
+
+        // Còi
+        const buzEl = document.getElementById("buzzerState");
+        buzEl.textContent = buzzer ? "ON" : "OFF";
+        buzEl.className = buzzer ? "state-on" : "state-off";
+      }
+
+      /* UPDATE MODE LAMP */
+      function updateModeLamp() {
+        const lamp = document.getElementById("modeLamp");
+        if (modeAuto) {
+          lamp.textContent = "AUTO";
+          lamp.className = "mode-lamp mode-auto";
+        } else {
+          lamp.textContent = "MANUAL";
+          lamp.className = "mode-lamp mode-manual";
+        }
+      }
+
+      /* SENSOR SIM */
+      function updateSystem() {
+        const temp = Math.round(25 + Math.random() * 40);
+        const gas = Math.round(200 + Math.random() * 400);
+        let state = temp < 45 ? "SAFE" : temp < 55 ? "WARN" : "ALARM";
+        document.getElementById("tempVal").textContent = temp + " °C";
+        document.getElementById("tempBar").style.width = temp + "%";
+        document.getElementById("tempNote").textContent = "Status: " + state;
+        const lamp = document.getElementById("bigLamp");
+        lamp.textContent = state;
+        lamp.className =
+          "big-lamp " +
+          (state === "SAFE"
+            ? "lamp-safe"
+            : state === "WARN"
+            ? "lamp-warn"
+            : "lamp-alarm");
+        if (chartData.labels.length > 20) {
+          chartData.labels.shift();
+          chartData.datasets[0].data.shift();
+          chartData.datasets[1].data.shift();
+        }
+        chartData.labels.push(new Date().toLocaleTimeString());
+        chartData.datasets[0].data.push(temp);
+        chartData.datasets[1].data.push(gas);
+        chart.update();
+
+        // AUTO LOGIC
+        if (modeAuto) {
+          if (temp > 50) {
+            charging = false;
+            overheat = true;
+            buzzer = true;
+            fan = true;
+            addLog("⚠️ Quá nhiệt >50°C, ngắt sạc!");
+          } else {
+            overheat = false;
+            charging = true;
+            fan = true;
+            buzzer = false;
+          }
+        } else {
+          if (temp > 50) {
+            charging = false;
+            overheat = true;
+            addLog("⚠️ Quá nhiệt! Ngắt sạc và khóa START");
+          } else overheat = false;
+        }
+
+        document.getElementById("alertTitle").textContent =
+          state !== "SAFE" ? "⚠️ " + state + " detected!" : "No alerts";
+        document.getElementById("ipAddr").textContent = "192.168.1.100";
+        document.getElementById("wifiSignal").textContent =
+          Math.round(50 + Math.random() * 50) + " %";
+        updateStates();
+        updateModeLamp();
+      }
+      setInterval(updateSystem, 4000);
+
+      /* LOGS */
+      function addLog(msg) {
+        const log = document.getElementById("logArea");
+        log.innerHTML =
+          "<div>" +
+          new Date().toLocaleTimeString() +
+          " - " +
+          msg +
+          "</div>" +
+          log.innerHTML;
+      }
+
+      /* CAMERA CLOSE */
+      function closeCam() {
+        document.getElementById("cameraModal").style.display = "none";
+        document.getElementById("cameraStream").src = "";
+      }
+    </script>
+  </body>
+</html>
